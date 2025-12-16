@@ -1,0 +1,45 @@
+name: Deploy liuxy
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - run: npm ci
+
+      # 方案A：在构建时指定 base
+      - name: 构建 liuxy
+        run: npx vite build --base /liuxy/
+
+        # 或者方案B：使用环境变量
+        # run: |
+        #   export NODE_ENV=production
+        #   npm run docs:buildvitepress build --base /blog/
+
+      - uses: actions/configure-pages@v4
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .vitepress/dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/deploy-pages@v4
